@@ -1,0 +1,5 @@
+title,discount_type,value,code,starts_at,product_ids,buy_quantity,get_quantity,get_discount,usage_limit,one_per_customer,combines_with_product_discounts,combines_with_order_discounts,combines_with_shipping_discounts,applies_to,customer_eligibility
+Test1 Percentage1,percentage,10,TEST1012341@,2025-01-01T00:00:00,,,100,TRUE,TRUE,TRUE,TRUE,all,all
+Test1 Fixed1,fixed_amount,5,TEST5111$,2025-01-01T00:00:00,,,50,FALSE,FALSE,FALSE,TRUE,all,all
+Test1 Shipping1,shipping,0,FREESHIP111^,2025-01-01T00:00:00,,,200,FALSE,TRUE,TRUE,FALSE,all,all
+Test1 BOGO1,buy_x_get_y,,TESTBOGO111&,2025-01-01T00:00:00,"9954787524887,9957419024663",1,1,100,150,TRUE,FALSE,FALSE,FALSE,specific_products,all

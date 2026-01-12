@@ -1,0 +1,9 @@
+node_modules
+.env
+.shopify
+.react-router
+dist
+build
+*.log
+local_backup.sql
+.DS_Store
