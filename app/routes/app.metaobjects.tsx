@@ -29,21 +29,23 @@ import { useImport } from "../hooks/useImport";
 import { ImportModal } from "../components/ImportModal";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const { admin } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
+    const shop = session.shop.replace(".myshopify.com", "");
     try {
         const definitions = await getMetaobjectDefinitions(admin);
-        return Response.json({ definitions });
+        return Response.json({ definitions, shop });
     } catch (error) {
         console.error("Failed to load metaobject definitions:", error);
         return Response.json({
             definitions: [],
+            shop,
             error: "System is busy processing imports. Please refresh in a few moments."
         });
     }
 }
 
 export default function MetaobjectsPage() {
-    const { definitions, error } = useLoaderData() as { definitions: MetaobjectDefinition[], error?: string };
+    const { definitions, error, shop } = useLoaderData() as { definitions: MetaobjectDefinition[], error?: string, shop: string };
     const navigation = useNavigation();
 
     const [showBanner, setShowBanner] = useState(true);
@@ -116,7 +118,7 @@ export default function MetaobjectsPage() {
             heading="No Metaobject Definitions found"
             action={{
                 content: 'Create Metaobject Definition',
-                url: 'https://admin.shopify.com/store/gwlsonali/content/metaobjects',
+                url: `https://admin.shopify.com/store/${shop}/settings/custom_data/metaobjects/create`,
                 external: true
             }}
             image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
