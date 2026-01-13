@@ -2,7 +2,7 @@
 
 client_id = "e05565cf1eb0d6b3fe7e383e1629604c"
 name = "Import/Export Data Manager"
-application_url = "https://exportimport-production.up.railway.app"
+application_url = "https://import-export-gwl-production.up.railway.app/"
 embedded = true
 
 [build]
@@ -13,15 +13,15 @@ api_version = "2026-01"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
-  uri = "https://exportimport-production.up.railway.app/webhooks/app/uninstalled"
+  uri = "https://import-export-gwl-production.up.railway.app/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
   topics = [ "app/scopes_update" ]
-  uri = "https://exportimport-production.up.railway.app/webhooks/app/scopes_update"
+  uri = "https://import-export-gwl-production.up.railway.app/webhooks/app/scopes_update"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_companies,read_customers,read_discounts,read_products,write_companies,write_customers,write_discounts,write_products,read_metaobject_definitions,write_metaobject_definitions,read_metaobjects,write_metaobjects,read_files,write_files"
 
 [auth]
-redirect_urls = [ "https://exportimport-production.up.railway.app/api/auth/callback" ]
+redirect_urls = [ "https://import-export-gwl-production.up.railway.app/api/auth/callback" ]
