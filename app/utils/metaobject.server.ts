@@ -76,6 +76,7 @@ export const METAOBJECT_DEFS = {
       { key: "product_ids", name: "Product IDs", type: "json" },
       { key: "collection_ids", name: "Collection IDs", type: "json" },
       { key: "status", name: "Status", type: "single_line_text_field" },
+      { key: "stored_metafields", name: "Stored Metafields", type: "multi_line_text_field" },
       { key: "created_at", name: "Created At", type: "date_time" },
       { key: "updated_at", name: "Updated At", type: "date_time" },
     ]

@@ -279,11 +279,11 @@ export default function DiscountsPage() {
         results={importResults}
         entityName="discounts"
         sampleCsvName="discounts_sample.csv"
-        sampleCsvContent={`title,description,discount_type,value,code,usage_limit,one_per_customer,combines_with_product_discounts,combines_with_order_discounts,combines_with_shipping_discounts,starts_at,ends_at,applies_to,customer_eligibility,minimum_requirement_type,buy_quantity,get_quantity,get_discount,product_ids
-Test Percentage Discount,15% off all items,percentage,15,SAVE15NOW,100,TRUE,TRUE,TRUE,TRUE,2025-12-01T00:00:00,,all,all,none,,,,
-Test Fixed Amount Discount,Fixed $10 off,fixed_amount,10,GET10OFF,50,FALSE,FALSE,FALSE,TRUE,2025-12-01T00:00:00,2026-01-01T00:00:00,all,all,none,,,,
-Test Free Shipping,Free shipping on all orders,shipping,0,SHIPFREE,200,FALSE,TRUE,TRUE,FALSE,2025-12-01T00:00:00,,all,all,none,,,,
-Buy 2 Get 1 Free,Buy 2 get 1 free on selected products,buy_x_get_y,,BOGO2025,150,TRUE,FALSE,FALSE,FALSE,2025-12-01T00:00:00,,specific_products,all,none,2,1,100,"1234567890,9876543210"`}
+        sampleCsvContent={`title,description,discount_type,value,code,usage_limit,one_per_customer,combines_with_product_discounts,combines_with_order_discounts,combines_with_shipping_discounts,starts_at,ends_at,applies_to,customer_eligibility,minimum_requirement_type,buy_quantity,get_quantity,get_discount,product_ids,metafields
+Test Percentage Discount,15% off all items,percentage,15,SAVE15NOW,100,TRUE,TRUE,TRUE,TRUE,2025-12-01T00:00:00,,all,all,none,,,,,custom.key:value
+Test Fixed Amount Discount,Fixed $10 off,fixed_amount,10,GET10OFF,50,FALSE,FALSE,FALSE,TRUE,2025-12-01T00:00:00,2026-01-01T00:00:00,all,all,none,,,,,custom.key:value
+Test Free Shipping,Free shipping on all orders,shipping,0,SHIPFREE,200,FALSE,TRUE,TRUE,FALSE,2025-12-01T00:00:00,,all,all,none,,,,,custom.key:value
+Buy 2 Get 1 Free,Buy 2 get 1 free on selected products,buy_x_get_y,,BOGO2025,150,TRUE,FALSE,FALSE,FALSE,2025-12-01T00:00:00,,specific_products,all,none,2,1,100,"1234567890,9876543210",custom.key:value`}
       />
       {showSuccessToast && (
         <Frame>

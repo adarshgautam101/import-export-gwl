@@ -262,7 +262,7 @@ export async function action({ request }: ActionFunctionArgs) {
               shopify_id,
               rule_set,
               product_ids,
-              metafields: record.metafields || null
+              stored_metafields: record.metafields || null
             };
 
             // Save to database and Shopify

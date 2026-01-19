@@ -18,7 +18,7 @@ export interface CollectionData {
   image_url?: string | null;
   product_ids?: string[];
   rule_set?: SmartCollectionRuleSet | null;
-  metafields?: string | null;
+  stored_metafields?: string | null;
 }
 
 export const getAllLocalCollections = async (admin: any, page = 1, pageSize = 20, collectionType?: 'manual' | 'smart') => {
@@ -108,7 +108,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any): P
     product_ids: data.product_ids ? JSON.parse(JSON.stringify(data.product_ids)) : null,
     rule_set: data.rule_set ? JSON.parse(JSON.stringify(data.rule_set)) : null,
     shopify_id: data.shopify_id ?? null,
-    metafields: data.metafields || null,
+    stored_metafields: data.stored_metafields || null,
     updated_at: new Date(),
   };
 
@@ -158,11 +158,21 @@ export async function saveCollectionLocally(data: CollectionData, admin: any): P
       handle: collectionHandle,
     };
 
-    if (data.metafields) {
+    if (data.stored_metafields) {
       try {
-        const metafieldsInput = data.metafields.split('|').map(mf => {
-          const [keyPart, value] = mf.split(':');
-          const [namespace, key] = keyPart.split('.');
+        const metafieldsInput = data.stored_metafields.split('|').map(mf => {
+          const separatorIndex = mf.indexOf(':');
+          if (separatorIndex === -1) return null;
+
+          const keyPart = mf.substring(0, separatorIndex);
+          const value = mf.substring(separatorIndex + 1);
+
+          let [namespace, key] = keyPart.split('.');
+          if (!key) {
+            key = namespace;
+            namespace = 'custom';
+          }
+
           if (namespace && key && value) {
             return { namespace, key, value, type: "single_line_text_field" };
           }

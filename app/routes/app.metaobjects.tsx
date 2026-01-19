@@ -261,7 +261,7 @@ export default function MetaobjectsPage() {
                         results={importResults}
                         entityName={activeDefinition.name}
                         sampleCsvName={`${activeDefinition.type}_sample.csv`}
-                        sampleCsvContent={`handle,status,${activeDefinition.fieldDefinitions.map(f => f.key).join(',')}\nsample-handle,ACTIVE,${activeDefinition.fieldDefinitions.map(() => '').join(',')}`}
+                        sampleCsvContent={`handle,status,${activeDefinition.fieldDefinitions.map(f => f.key).join(',')},metafields\nsample-handle,ACTIVE,${activeDefinition.fieldDefinitions.map(() => '').join(',')},custom.key:value`}
                     />
                 )}
             </Page>
