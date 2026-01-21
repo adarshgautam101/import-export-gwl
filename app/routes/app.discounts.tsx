@@ -16,22 +16,23 @@ const jsonResponse = (data: any, status = 200) => new Response(
 );
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { admin } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+  const shop = session.shop.replace(".myshopify.com", "");
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") || "1", 10);
 
   const hasDefinition = await hasMetaobjectDefinition(admin, METAOBJECT_DEFS.DISCOUNT.type);
 
   if (!hasDefinition) {
-    return Response.json({ discounts: [], pagination: {}, hasDefinition: false });
+    return Response.json({ discounts: [], pagination: {}, hasDefinition: false, shop });
   }
 
   try {
     const { discounts, pagination } = await getAllLocalDiscounts(admin, page);
-    return Response.json({ discounts, pagination, hasDefinition: true });
+    return Response.json({ discounts, pagination, hasDefinition: true, shop });
   } catch (error) {
     console.error("Failed to load discounts:", error);
-    return Response.json({ discounts: [], pagination: { page: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }, hasDefinition: true });
+    return Response.json({ discounts: [], pagination: { page: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }, hasDefinition: true, shop });
   }
 }
 
@@ -63,7 +64,7 @@ import { EmptyState, Page } from "@shopify/polaris";
 import { useSubmit } from "react-router";
 
 export default function DiscountsPage() {
-  const { discounts, pagination, hasDefinition } = useLoaderData() as { discounts: Discount[]; pagination: any; hasDefinition: boolean };
+  const { discounts, pagination, hasDefinition, shop } = useLoaderData() as { discounts: Discount[]; pagination: any; hasDefinition: boolean; shop: string };
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const navigate = useNavigate();
@@ -175,7 +176,7 @@ export default function DiscountsPage() {
       {discount.shopify_id && (
         <Button
           size="slim"
-          url={`https://admin.shopify.com/store/gwlsonali/discounts/${discount.shopify_id.split('/').pop()}`}
+          url={`https://admin.shopify.com/store/${shop}/discounts/${discount.shopify_id.split('/').pop()}`}
           external
           icon={DiscountIcon}
         >

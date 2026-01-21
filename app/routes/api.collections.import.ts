@@ -83,6 +83,63 @@ const normalizeField = (field: string) => {
 
 import { importJobManager } from "../services/importJobManager.server";
 
+/**
+ * Validates CSV headers to ensure the file matches the expected entity type
+ * @param headers Array of header names from the CSV
+ * @returns Object with isValid flag and error message if invalid
+ */
+function validateCollectionHeaders(headers: string[]): { isValid: boolean; errorMessage?: string; detectedType?: string } {
+  const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
+
+  // Unique headers that identify specific entity types
+  const discountHeaders = ['discount_type', 'buy_quantity', 'get_quantity', 'get_discount', 'usage_limit', 'combines_with_product_discounts'];
+  const companyHeaders = ['company_id', 'location_id', 'location_name', 'shipping_street', 'shipping_city', 'contact_email'];
+  const metaobjectHeaders = ['metaobject_type', 'definition_type'];
+
+  // Collection-specific headers (at least one should be present)
+  const collectionHeaders = ['collection_type', 'relation_type', 'rule_set'];
+
+  // Check if this looks like a discount file
+  const discountHeaderMatches = discountHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (discountHeaderMatches >= 3) {
+    return {
+      isValid: false,
+      detectedType: 'discount',
+      errorMessage: 'This appears to be a discount file. Please use the Discounts import page to import discount data.'
+    };
+  }
+
+  // Check if this looks like a company file
+  const companyHeaderMatches = companyHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (companyHeaderMatches >= 3) {
+    return {
+      isValid: false,
+      detectedType: 'company',
+      errorMessage: 'This appears to be a company file. Please use the Companies import page to import company data.'
+    };
+  }
+
+  // Check if this looks like a metaobject file
+  const metaobjectHeaderMatches = metaobjectHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (metaobjectHeaderMatches >= 1) {
+    return {
+      isValid: false,
+      detectedType: 'metaobject',
+      errorMessage: 'This appears to be a metaobject file. Please use the Metaobjects import page to import metaobject data.'
+    };
+  }
+
+  // Validate that it has at least a title column (required for all collections)
+  if (!normalizedHeaders.includes('title')) {
+    return {
+      isValid: false,
+      errorMessage: 'Invalid collection file. The CSV must include a "title" column.'
+    };
+  }
+
+  return { isValid: true };
+}
+
 export async function loader({ request }: ActionFunctionArgs) {
   const url = new URL(request.url);
   const jobId = url.searchParams.get('jobId');
@@ -145,6 +202,21 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!records || !Array.isArray(records)) {
       return Response.json({ error: "Invalid request body: 'records' array required" }, { status: 400 });
     }
+
+    // Validate CSV headers to ensure correct file type
+    if (records.length > 0) {
+      const headers = Object.keys(records[0]);
+      const validation = validateCollectionHeaders(headers);
+
+      if (!validation.isValid) {
+        console.warn(`🚫 Invalid file type detected for collection import:`, validation.detectedType);
+        return Response.json({
+          error: "Invalid file type",
+          message: validation.errorMessage
+        }, { status: 400 });
+      }
+    }
+
 
     // Start Background Job
     const jobId = importJobManager.createJob('collections', records.length);
@@ -280,9 +352,15 @@ export async function action({ request }: ActionFunctionArgs) {
               } else if (!isSmart && product_ids.length > 0) {
                 details += ` (${product_ids.length} products)`;
               }
+
+              // Add warnings to the details if present
+              if (result.warnings && result.warnings.length > 0) {
+                details += ` ⚠️ Warning: ${result.warnings.join('; ')}`;
+              }
+
               results.push({
                 title: record.title,
-                status: 'success',
+                status: result.warnings && result.warnings.length > 0 ? 'warning' : 'success',
                 message: details
               });
             }
@@ -290,22 +368,44 @@ export async function action({ request }: ActionFunctionArgs) {
             errorCount++;
             const errorMessage = error instanceof Error ? error.message : String(error);
 
-            // Provide detailed error information
-            let detailedError = errorMessage;
-            if (record.collection_type?.toLowerCase() === 'smart') {
-              detailedError += ` [Smart: ${record.field || 'tag'} ${record.relation_type || 'unknown'}]`;
+            // Generate user-friendly error messages
+            let userFriendlyError = errorMessage;
+
+            // Check for common error patterns and provide helpful guidance
+            if (errorMessage.includes('Field definition') && errorMessage.includes('does not exist')) {
+              // Metafield error - explain what went wrong
+              const collectionTypeLabel = record.collection_type?.toLowerCase() === 'smart' ? 'Smart' : 'Manual';
+              userFriendlyError = `Unable to import ${collectionTypeLabel} collection. The metafield format is invalid. Please use the format "namespace.key:value" (e.g., "custom.testfield:myvalue") or remove the metafields column if not needed.`;
+            } else if (errorMessage.includes('Title is required')) {
+              userFriendlyError = 'Collection title is required. Please ensure each row has a valid title.';
+            } else if (errorMessage.includes('Condition is required')) {
+              userFriendlyError = `Smart collection requires a condition value. Please provide a value for the rule.`;
+            } else if (errorMessage.includes('product IDs')) {
+              userFriendlyError = 'Invalid product IDs format. Please use comma-separated numbers (e.g., "123,456,789").';
+            } else if (errorMessage.includes('rate limit') || errorMessage.includes('Throttled')) {
+              userFriendlyError = 'Shopify rate limit reached. Please try again in a few moments.';
+            } else if (errorMessage.includes('Authentication') || errorMessage.includes('permission')) {
+              userFriendlyError = 'Authentication error. Please ensure you have the necessary permissions.';
             } else {
-              detailedError += ` [Manual: ${record.product_ids ? 'with products' : 'no products'}]`;
+              // For other errors, provide a generic but friendly message
+              const collectionTypeLabel = record.collection_type?.toLowerCase() === 'smart' ? 'Smart' : 'Manual';
+              userFriendlyError = `Failed to import ${collectionTypeLabel} collection: ${errorMessage}`;
             }
 
             results.push({
               title: record?.title || 'Unknown',
               status: 'error',
-              message: detailedError
+              message: userFriendlyError
             });
 
-            // Log error for debugging
-            console.error(`Failed to import collection "${record?.title}":`, errorMessage);
+            // Log technical details for debugging
+            console.error(`Failed to import collection "${record?.title}":`, {
+              originalError: errorMessage,
+              collectionType: record.collection_type,
+              field: record.field,
+              relationType: record.relation_type,
+              hasProducts: !!record.product_ids
+            });
           } finally {
             processedCount++;
             importJobManager.updateProgress(jobId, processedCount, successCount, errorCount, results.slice(results.length - 1));

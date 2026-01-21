@@ -5,6 +5,61 @@ import { authenticate } from "../shopify.server";
 
 import { importJobManager } from "../services/importJobManager.server";
 
+/**
+ * Validates CSV headers to ensure the file matches the expected entity type
+ * @param headers Array of header names from the CSV
+ * @returns Object with isValid flag and error message if invalid
+ */
+function validateCompanyHeaders(headers: string[]): { isValid: boolean; errorMessage?: string; detectedType?: string } {
+  const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
+
+  // Unique headers that identify specific entity types
+  const collectionHeaders = ['collection_type', 'relation_type', 'rule_set'];
+  const discountHeaders = ['discount_type', 'buy_quantity', 'get_quantity', 'get_discount', 'usage_limit'];
+  const metaobjectHeaders = ['metaobject_type', 'definition_type'];
+
+  // Check if this looks like a collection file
+  const collectionHeaderMatches = collectionHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (collectionHeaderMatches >= 2) {
+    return {
+      isValid: false,
+      detectedType: 'collection',
+      errorMessage: 'This appears to be a collection file. Please use the Collections import page to import collection data.'
+    };
+  }
+
+  // Check if this looks like a discount file
+  const discountHeaderMatches = discountHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (discountHeaderMatches >= 3) {
+    return {
+      isValid: false,
+      detectedType: 'discount',
+      errorMessage: 'This appears to be a discount file. Please use the Discounts import page to import discount data.'
+    };
+  }
+
+  // Check if this looks like a metaobject file
+  const metaobjectHeaderMatches = metaobjectHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (metaobjectHeaderMatches >= 1) {
+    return {
+      isValid: false,
+      detectedType: 'metaobject',
+      errorMessage: 'This appears to be a metaobject file. Please use the Metaobjects import page to import metaobject data.'
+    };
+  }
+
+  // Validate that it has company-specific columns
+  if (!normalizedHeaders.includes('company_id') && !normalizedHeaders.includes('name')) {
+    return {
+      isValid: false,
+      errorMessage: 'Invalid company file. The CSV must include either "company_id" or "name" column.'
+    };
+  }
+
+  return { isValid: true };
+}
+
+
 export async function loader({ request }: ActionFunctionArgs) {
   const url = new URL(request.url);
   const jobId = url.searchParams.get('jobId');
@@ -73,6 +128,21 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!records || !Array.isArray(records)) {
       return Response.json({ error: "Invalid request body: 'records' array required" }, { status: 400 });
     }
+
+    // Validate CSV headers to ensure correct file type
+    if (records.length > 0) {
+      const headers = Object.keys(records[0]);
+      const validation = validateCompanyHeaders(headers);
+
+      if (!validation.isValid) {
+        console.warn(`🚫 Invalid file type detected for company import:`, validation.detectedType);
+        return Response.json({
+          error: "Invalid file type",
+          message: validation.errorMessage
+        }, { status: 400 });
+      }
+    }
+
 
     // Start Background Job
     const jobId = importJobManager.createJob('companies', records.length);

@@ -144,16 +144,30 @@ export function ImportModal({
                                 {results.errorCount > 0 && <p>Failed: <strong>{results.errorCount}</strong></p>}
                             </Banner>
 
-                            {/* Only show detailed errors if any exist */}
-                            {results.results && results.results.some(r => r.status === 'error') && (
+                            {/* Show detailed errors and warnings if any exist */}
+                            {results.results && (results.results.some(r => r.status === 'error') || results.results.some(r => r.status === 'warning')) && (
                                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                     <BlockStack gap="200">
-                                        <Text as="h3" variant="headingSm" tone="critical">Errors:</Text>
-                                        {results.results.filter(r => r.status === 'error').map((res, index) => (
-                                            <Text key={index} as="p" tone="critical">
-                                                {res.title}: {res.message}
-                                            </Text>
-                                        ))}
+                                        {results.results.filter(r => r.status === 'error').length > 0 && (
+                                            <>
+                                                <Text as="h3" variant="headingSm" tone="critical">Errors:</Text>
+                                                {results.results.filter(r => r.status === 'error').map((res, index) => (
+                                                    <Text key={`error-${index}`} as="p" tone="critical">
+                                                        {res.title}: {res.message}
+                                                    </Text>
+                                                ))}
+                                            </>
+                                        )}
+                                        {results.results.filter(r => r.status === 'warning').length > 0 && (
+                                            <>
+                                                <Text as="h3" variant="headingSm" tone="caution">Warnings:</Text>
+                                                {results.results.filter(r => r.status === 'warning').map((res, index) => (
+                                                    <Text key={`warning-${index}`} as="p" tone="caution">
+                                                        {res.title}: {res.message}
+                                                    </Text>
+                                                ))}
+                                            </>
+                                        )}
                                     </BlockStack>
                                 </div>
                             )}

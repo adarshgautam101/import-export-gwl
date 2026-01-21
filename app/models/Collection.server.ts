@@ -96,7 +96,8 @@ async function withRetry<T>(
   }
 }
 
-export async function saveCollectionLocally(data: CollectionData, admin: any): Promise<any> {
+export async function saveCollectionLocally(data: CollectionData, admin: any): Promise<{ action: 'created' | 'updated'; shopifyId?: bigint; warnings?: string[] }> {
+  const warnings: string[] = [];
   const collectionData = {
     title: data.title,
     description: data.description,
@@ -162,25 +163,37 @@ export async function saveCollectionLocally(data: CollectionData, admin: any): P
       try {
         const metafieldsInput = data.stored_metafields.split('|').map(mf => {
           const separatorIndex = mf.indexOf(':');
-          if (separatorIndex === -1) return null;
+          if (separatorIndex === -1) {
+            warnings.push(`Invalid metafield format "${mf}". Expected format: "namespace.key:value" (e.g., "custom.color:blue")`);
+            return null;
+          }
 
           const keyPart = mf.substring(0, separatorIndex);
           const value = mf.substring(separatorIndex + 1);
 
           let [namespace, key] = keyPart.split('.');
           if (!key) {
+            // Namespace is missing - warn the user
             key = namespace;
             namespace = 'custom';
+            warnings.push(`Metafield "${mf}" is missing namespace. Using "custom.${key}:${value}" instead. Please ensure the metafield definition "custom.${key}" exists in your Shopify store.`);
           }
 
           if (namespace && key && value) {
             return { namespace, key, value, type: "single_line_text_field" };
           }
+          warnings.push(`Incomplete metafield data in "${mf}". Skipping this metafield.`);
           return null;
         }).filter(Boolean);
-        if (metafieldsInput.length > 0) input.metafields = metafieldsInput;
+
+        if (metafieldsInput.length > 0) {
+          input.metafields = metafieldsInput;
+        } else if (data.stored_metafields.trim()) {
+          warnings.push('No valid metafields could be parsed. Collection imported without metafields.');
+        }
       } catch (e) {
         console.warn("Failed to parse collection metafields:", e);
+        warnings.push('Failed to parse metafields. Collection imported without metafields.');
       }
     }
 
@@ -283,7 +296,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any): P
       }, metaHandle);
     }
 
-    return { action, shopifyId: newShopifyId };
+    return { action, shopifyId: newShopifyId || undefined, warnings: warnings.length > 0 ? warnings : undefined };
   }
   throw new Error("Collection operation on Shopify failed completely or timed out.");
 }

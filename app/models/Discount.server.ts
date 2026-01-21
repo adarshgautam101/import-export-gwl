@@ -26,7 +26,6 @@ export interface CreateDiscountData {
   collection_ids?: string[];
   shopify_id?: string;
   status?: 'active' | 'draft' | 'archived';
-  stored_metafields?: string | null;
 }
 
 export async function getAllLocalDiscounts(admin: any, page = 1, pageSize = 20, cursor?: string) {
@@ -235,13 +234,7 @@ async function createFreeShippingDiscount(admin: any, discountData: CreateDiscou
     }
   };
 
-  const result = await createWithRetry();
-
-  if (result?.id && discountData.stored_metafields) {
-    await setDiscountMetafields(admin, result.id, discountData.stored_metafields, discountData.title);
-  }
-
-  return result;
+  return createWithRetry();
 }
 
 const buildCustomerGets = (discountData: CreateDiscountData) => {

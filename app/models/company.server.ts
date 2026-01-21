@@ -36,18 +36,8 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
         try {
           // Format: namespace.key:value|namespace.key:value
           metafieldsInput = companyData.metafields.split('|').map(mf => {
-            const separatorIndex = mf.indexOf(':');
-            if (separatorIndex === -1) return null;
-
-            const keyPart = mf.substring(0, separatorIndex);
-            const value = mf.substring(separatorIndex + 1);
-
-            let [namespace, key] = keyPart.split('.');
-            if (!key) {
-              key = namespace;
-              namespace = 'custom';
-            }
-
+            const [keyPart, value] = mf.split(':');
+            const [namespace, key] = keyPart.split('.');
             if (namespace && key && value) {
               return { namespace, key, value, type: "single_line_text_field" };
             }

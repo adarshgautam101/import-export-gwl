@@ -28,6 +28,60 @@ interface CsvRecord {
   collection_ids?: string;
 }
 
+/**
+ * Validates CSV headers to ensure the file matches the expected entity type
+ * @param headers Array of header names from the CSV
+ * @returns Object with isValid flag and error message if invalid
+ */
+function validateDiscountHeaders(headers: string[]): { isValid: boolean; errorMessage?: string; detectedType?: string } {
+  const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
+
+  // Unique headers that identify specific entity types
+  const collectionHeaders = ['collection_type', 'relation_type', 'rule_set'];
+  const companyHeaders = ['company_id', 'location_id', 'location_name', 'shipping_street', 'shipping_city'];
+  const metaobjectHeaders = ['metaobject_type', 'definition_type'];
+
+  // Check if this looks like a collection file
+  const collectionHeaderMatches = collectionHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (collectionHeaderMatches >= 2) {
+    return {
+      isValid: false,
+      detectedType: 'collection',
+      errorMessage: 'This appears to be a collection file. Please use the Collections import page to import collection data.'
+    };
+  }
+
+  // Check if this looks like a company file
+  const companyHeaderMatches = companyHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (companyHeaderMatches >= 3) {
+    return {
+      isValid: false,
+      detectedType: 'company',
+      errorMessage: 'This appears to be a company file. Please use the Companies import page to import company data.'
+    };
+  }
+
+  // Check if this looks like a metaobject file
+  const metaobjectHeaderMatches = metaobjectHeaders.filter(h => normalizedHeaders.includes(h)).length;
+  if (metaobjectHeaderMatches >= 1) {
+    return {
+      isValid: false,
+      detectedType: 'metaobject',
+      errorMessage: 'This appears to be a metaobject file. Please use the Metaobjects import page to import metaobject data.'
+    };
+  }
+
+  // Validate that it has discount-specific columns
+  if (!normalizedHeaders.includes('discount_type') && !normalizedHeaders.includes('title')) {
+    return {
+      isValid: false,
+      errorMessage: 'Invalid discount file. The CSV must include a "title" and "discount_type" column.'
+    };
+  }
+
+  return { isValid: true };
+}
+
 // Safe date parsing function
 const parseDate = (dateString: string | undefined): Date | undefined => {
   if (!dateString) return undefined;
@@ -245,6 +299,16 @@ export const action: ActionFunction = async ({ request }) => {
     if (!records || records.length === 0) {
       throw new Error("CSV file is empty or has no valid data.");
     }
+
+    // Validate CSV headers to ensure correct file type
+    const headers = Object.keys(records[0]);
+    const validation = validateDiscountHeaders(headers);
+
+    if (!validation.isValid) {
+      console.warn(`🚫 Invalid file type detected for discount import:`, validation.detectedType);
+      throw new Error(validation.errorMessage || 'Invalid file type');
+    }
+
 
     // Start Background Job
     const jobId = importJobManager.createJob('discounts', records.length);
