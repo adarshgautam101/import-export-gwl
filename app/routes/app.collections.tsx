@@ -310,6 +310,7 @@ export default function CollectionsPage() {
         sampleCsvContent={`title,collection_type,product_ids,relation_type,tags,metafields
 Manual Collection,manual,1234567890,,,custom.testcollection:Manual Value
 Collection C,smart,,equals,yes,custom.testcollection:Smart Value`}
+        onImportComplete={() => navigate(".", { replace: true })}
       />
       {showSuccessToast && (
         <Frame>

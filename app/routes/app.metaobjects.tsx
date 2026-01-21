@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs } from "react-router";
-import { useLoaderData, Form, useNavigation, useFetcher } from "react-router";
+import { useLoaderData, Form, useNavigation, useFetcher, useNavigate } from "react-router";
 import {
     Page,
     Layout,
@@ -47,6 +47,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function MetaobjectsPage() {
     const { definitions, error, shop } = useLoaderData() as { definitions: MetaobjectDefinition[], error?: string, shop: string };
     const navigation = useNavigation();
+    const navigate = useNavigate();
 
     const [showBanner, setShowBanner] = useState(true);
     const [searchValue, setSearchValue] = useState("");
@@ -262,6 +263,7 @@ export default function MetaobjectsPage() {
                         entityName={activeDefinition.name}
                         sampleCsvName={`${activeDefinition.type}_sample.csv`}
                         sampleCsvContent={`handle,status,${activeDefinition.fieldDefinitions.map(f => f.key).join(',')},metafields\nsample-handle,ACTIVE,${activeDefinition.fieldDefinitions.map(() => '').join(',')},custom.key:value`}
+                        onImportComplete={() => navigate(".", { replace: true })}
                     />
                 )}
             </Page>

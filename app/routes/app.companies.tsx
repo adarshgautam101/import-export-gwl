@@ -111,11 +111,7 @@ export default function CompaniesPage() {
                 heading="Database Required"
                 action={{
                   content: 'Create Database',
-                  onAction: async () => {
-                    submit({ actionType: "create_database" }, { method: "post" });
-                    // Wait a moment for the database to be created, then force a full reload
-                    setTimeout(() => window.location.reload(), 1500);
-                  },
+                  onAction: () => submit({ actionType: "create_database" }, { method: "post" }),
                   loading: isCreating
                 }}
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
@@ -242,6 +238,7 @@ Test Company IN, CMP-002, test-in@example.com, TAX-IN, India Note, NET_30, INR, 
 Test Company Multi, CMP-003, test-multi@example.com, TAX-MULTI, Multi Note, NET_30, USD, Loc 1, 100 Multi Way, Multi City, 90001, United States, +13105550101, custom.key:value
 Test Company Multi, CMP-003, test-multi@example.com, TAX-MULTI, Multi Note, NET_30, USD, Loc 2, 200 Multi Way, Multi City, 90002, United States, +13105550102, custom.key:value
 Test Company Multi, CMP-003, test-multi@example.com, TAX-MULTI, Multi Note, NET_30, USD, Loc 3, 300 Multi Way, Multi City, 90003, United States, +13105550103, custom.key:value`}
+        onImportComplete={() => navigate(".", { replace: true })}
       />
       {showSuccessToast && (
         <Frame>

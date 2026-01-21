@@ -8,7 +8,7 @@ export interface ImportResult {
     syncedCount?: number;
     results?: {
         title: string;
-        status: 'success' | 'error';
+        status: 'success' | 'error' | 'warning';
         message: string;
     }[];
 }

@@ -15,6 +15,7 @@ interface ImportModalProps {
     sampleCsvContent: string;
     sampleCsvName: string;
     entityName: string; // e.g., "companies", "collections"
+    onImportComplete?: () => void; // Optional callback for post-import actions
 }
 
 export function ImportModal({
@@ -28,7 +29,8 @@ export function ImportModal({
     results,
     sampleCsvContent,
     sampleCsvName,
-    entityName
+    entityName,
+    onImportComplete
 }: ImportModalProps) {
     const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
@@ -70,7 +72,9 @@ export function ImportModal({
                         content: 'Close',
                         onAction: () => {
                             onClose();
-                            window.location.reload();
+                            if (onImportComplete) {
+                                onImportComplete();
+                            }
                         }
                     } : undefined
                 }
