@@ -232,12 +232,12 @@ export default function CompaniesPage() {
         results={importResults}
         entityName="companies"
         sampleCsvName="companies_sample.csv"
-        sampleCsvContent={`name, company_id, contact_email, tax_id, note, payment_terms, currency_code, location_name, address1, city, zip, country_code, phone, metafields
-Test Company US, CMP-001, test-us@example.com, TAX-US, US Note, NET_30, USD, NY HQ, 123 Wall St, New York, 10005, United States, +12125550123, custom.key:value
-Test Company IN, CMP-002, test-in@example.com, TAX-IN, India Note, NET_30, INR, MP Branch, 45 Main Road, Dhar, 454552, India, +919876543210, custom.key:value
-Test Company Multi, CMP-003, test-multi@example.com, TAX-MULTI, Multi Note, NET_30, USD, Loc 1, 100 Multi Way, Multi City, 90001, United States, +13105550101, custom.key:value
-Test Company Multi, CMP-003, test-multi@example.com, TAX-MULTI, Multi Note, NET_30, USD, Loc 2, 200 Multi Way, Multi City, 90002, United States, +13105550102, custom.key:value
-Test Company Multi, CMP-003, test-multi@example.com, TAX-MULTI, Multi Note, NET_30, USD, Loc 3, 300 Multi Way, Multi City, 90003, United States, +13105550103, custom.key:value`}
+        sampleCsvContent={`name,company_id,contact_email,location_name,address1,city,state,zip,country_code,phone,metafields
+Test Company US,CMP-001,test-us@example.com,NY HQ,123 Wall St,New York,NY,10005,United States,+12125550123,custom.key:value
+Test Company IN,CMP-002,test-in@example.com,MP Branch,45 Main Road,Dhar,MP,454552,India,+919876543210,custom.key:value
+Test Company Multi,CMP-003,test-multi@example.com,Loc 1,100 Multi Way,Multi City,CA,90001,United States,+13105550101,custom.key:value
+Test Company Multi,CMP-003,test-multi@example.com,Loc 2,200 Multi Way,Multi City,CA,90002,United States,+13105550102,custom.key:value
+Test Company Multi,CMP-003,test-multi@example.com,Loc 3,300 Multi Way,Multi City,CA,90003,United States,+13105550103,custom.key:value`}
         onImportComplete={() => navigate(".", { replace: true })}
       />
       {showSuccessToast && (

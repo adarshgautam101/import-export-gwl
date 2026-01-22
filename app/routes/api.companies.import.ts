@@ -155,32 +155,42 @@ export async function action({ request }: ActionFunctionArgs) {
       const results: any[] = [];
 
       // Transform CSV records to company format
-      const companies = records.map((record: any, index: number) => ({
-        name: record.name || record['Company Name'] || `Company ${index + 1}`,
-        company_id: record.company_id || record.id || `COMP_${Date.now()}_${index}`,
-        main_contact_id: record.main_contact_id || record['Company Contact Last Name'] || null,
-        contact_email: record.contact_email || null,
-        contact_first_name: record.contact_first_name || null,
-        contact_last_name: record.contact_last_name || null,
-        contact_phone: record.contact_phone || null,
-        location_name: record.location_name || 'Main Location',
-        location_id: record.location_id || `${record.company_id || index}_LOC0`,
-        shipping_street: record.shipping_street || record['Company Location Address Line 1'] || null,
-        shipping_city: record.shipping_city || record['Company Location City'] || null,
-        shipping_state: record.shipping_state || record['Company Location Province'] || null,
-        shipping_zip: record.shipping_zip || record['Company Location Zip'] || null,
-        shipping_country: record.shipping_country || record['Company Location Country'] || null,
-        billing_street: record.billing_street || record['Company Location Address Line 1'] || null,
-        billing_city: record.billing_city || record['Company Location City'] || null,
-        billing_state: record.billing_state || record['Company Location Province'] || null,
-        billing_zip: record.billing_zip || record['Company Location Zip'] || null,
-        billing_country: record.billing_country || record['Company Location Country'] || null,
-        billing_same_as_shipping: record.billing_same_as_shipping !== undefined ? record.billing_same_as_shipping === 'true' || record.billing_same_as_shipping === true : true,
-        payment_terms: record.payment_terms || 'Net 30',
-        metafields: record.metafields || null,
-        catalogs: [],
-        shopify_customer_id: undefined
-      }));
+      const companies = records.map((record: any, index: number) => {
+        // Normalize record keys to lowercase for easier matching
+        const normalizedRecord: any = {};
+        Object.keys(record).forEach(key => {
+          normalizedRecord[key.toLowerCase().trim()] = record[key];
+        });
+
+        const companyId = normalizedRecord.company_id || normalizedRecord.id || `COMP_${Date.now()}_${index}`;
+
+        return {
+          name: normalizedRecord.name || normalizedRecord['company name'] || `Company ${index + 1}`,
+          company_id: companyId,
+          main_contact_id: normalizedRecord.main_contact_id || normalizedRecord['company contact last name'] || null,
+          contact_email: normalizedRecord.contact_email || normalizedRecord.email || null,
+          contact_first_name: normalizedRecord.contact_first_name || normalizedRecord.first_name || null,
+          contact_last_name: normalizedRecord.contact_last_name || normalizedRecord.last_name || null,
+          contact_phone: normalizedRecord.contact_phone || normalizedRecord.phone || null,
+          location_name: normalizedRecord.location_name || normalizedRecord['location name'] || 'Main Location',
+          location_id: normalizedRecord.location_id || `${companyId}_LOC${index}`,
+          shipping_street: normalizedRecord.shipping_street || normalizedRecord.address1 || normalizedRecord['company location address line 1'] || null,
+          shipping_city: normalizedRecord.shipping_city || normalizedRecord.city || normalizedRecord['company location city'] || null,
+          shipping_state: normalizedRecord.shipping_state || normalizedRecord.state || normalizedRecord.province || normalizedRecord['company location province'] || null,
+          shipping_zip: normalizedRecord.shipping_zip || normalizedRecord.zip || normalizedRecord['company location zip'] || null,
+          shipping_country: normalizedRecord.shipping_country || normalizedRecord.country || normalizedRecord.country_code || normalizedRecord['company location country'] || null,
+          billing_street: normalizedRecord.billing_street || normalizedRecord.address1 || normalizedRecord['company location address line 1'] || null,
+          billing_city: normalizedRecord.billing_city || normalizedRecord.city || normalizedRecord['company location city'] || null,
+          billing_state: normalizedRecord.billing_state || normalizedRecord.state || normalizedRecord.province || normalizedRecord['company location province'] || null,
+          billing_zip: normalizedRecord.shipping_zip || normalizedRecord.zip || normalizedRecord['company location zip'] || null,
+          billing_country: normalizedRecord.shipping_country || normalizedRecord.country || normalizedRecord.country_code || normalizedRecord['company location country'] || null,
+          billing_same_as_shipping: normalizedRecord.billing_same_as_shipping !== undefined ? normalizedRecord.billing_same_as_shipping === 'true' || normalizedRecord.billing_same_as_shipping === true : true,
+          payment_terms: normalizedRecord.payment_terms || 'Net 30',
+          metafields: normalizedRecord.metafields || null,
+          catalogs: [],
+          shopify_customer_id: undefined
+        };
+      });
 
       // Process ALL companies together (importCompanies handles grouping by company_id internally)
       try {

@@ -120,13 +120,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const csvData = allDiscounts.map(item => {
       const discount = item.codeDiscount || item.automaticDiscount || {};
 
-      let metafieldsStr = '';
-      if (includeMetafields) {
-        metafieldsStr = discount.metafields?.edges?.map((edge: any) =>
-          `${edge.node.namespace}.${edge.node.key}:${edge.node.value}`
-        ).join('|') || '';
-      }
-
       let value = '';
       if (discount.customerGets?.value?.percentage) {
         value = `${discount.customerGets.value.percentage * 100}%`;
@@ -142,12 +135,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
         value: value,
         starts_at: discount.startsAt || '',
         ends_at: discount.endsAt || '',
-        ...(includeMetafields ? { metafields: metafieldsStr } : {})
       };
     });
 
     const columns = ['title', 'status', 'type', 'code', 'value', 'starts_at', 'ends_at'];
-    if (includeMetafields) columns.push('metafields');
 
     const csvContent = stringify(csvData, { header: true, columns });
     const filename = `discounts-export-${new Date().toISOString().split('T')[0]}.csv`;

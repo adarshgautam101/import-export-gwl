@@ -174,8 +174,9 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
                 console.log(`✅ Recovered existing company ID: ${foundCompany.id}`);
                 return { company: foundCompany, isNew: false };
               } else {
-                // User requirement: Do not modify email, drop the company if email is taken by someone else
-                throw new Error(`Email ${contactEmail} is already taken by another company: "${foundCompany.name}" (ID: ${foundCompany.id})`);
+                // User requirement: If email is taken, link to that company anyway but log a warning
+                console.warn(`⚠️ Email ${contactEmail} is taken by "${foundCompany.name}" (ID: ${foundCompany.id}). Linking to it anyway.`);
+                return { company: foundCompany, isNew: false };
               }
             }
           } catch (e: any) {
@@ -462,7 +463,7 @@ export async function importCompanies(
         }
       }
       // Save all locations to local database ONLY if Shopify sync was successful
-      if (!shopifyCompanyId || !shopifySyncSuccessful) {
+      if (!shopifyCompanyId) {
         console.warn(`⚠️ Skipping Metaobject creation for company ${companyId} because Shopify sync failed.`);
         for (const location of locations) {
           results.push({
