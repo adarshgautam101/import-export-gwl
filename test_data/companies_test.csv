@@ -1,13 +1,7 @@
 company_id,name,location_id,location_name,contact_email,shipping_street,shipping_city,shipping_country,shipping_zip,shipping_state
-CMP-TEST-001,Test Company A,LOC-A1,Headquarters,test-a-new@example.com,123 Main St,New York,United States,10001,NY
-CMP-TEST-001,Test Company A,LOC-A2,Warehouse,test-a-new@example.com,456 Side St,New York,United States,10002,NY
-CMP-TEST-001,Test Company A,LOC-A3,Retail Store,test-a-new@example.com,789 Broadway,New York,United States,10003,NY
-CMP-TEST-002,Test Company B,LOC-B1,Main Office,test-b-new@example.com,101 Market St,San Francisco,United States,94105,CA
-CMP-TEST-002,Test Company B,LOC-B2,Distribution,test-b-new@example.com,202 Dock St,San Francisco,United States,94107,CA
-CMP-TEST-002,Test Company B,LOC-B3,Outlet,test-b-new@example.com,303 Pier,San Francisco,United States,94111,CA
-CMP-TEST-003,Test Company C,LOC-C1,HQ,test-c@example.com,555 Tech Way,Seattle,United States,98101,WA
-CMP-TEST-003,Test Company C,LOC-C2,Storage,test-c@example.com,666 Industrial Dr,Seattle,United States,98102,WA
-CMP-TEST-003,Test Company C,LOC-C3,Showroom,test-c@example.com,777 Retail Ave,Seattle,United States,98103,WA
-CMP-TEST-004,Test Company D,LOC-D1,Central,test-d@example.com,888 Maple St,Chicago,United States,60601,IL
-CMP-TEST-004,Test Company D,LOC-D2,North,test-d@example.com,999 North Rd,Chicago,United States,60602,IL
-CMP-TEST-004,Test Company D,LOC-D3,South,test-d@example.com,111 South Blvd,Chicago,United States,60603,IL
+,,LOC-A1,Headquarters,test-a-new@example.com,123 Main St,New York,United States,10001,NY
+,,LOC-A2,Warehouse,test-a-new@example.com,456 Side St,New York,United States,10002,NY
+,,LOC-A3,Retail Store,test-a-new@example.com,789 Broadway,New York,United States,10003,NY
+,,LOC-B1,Main Office,test-b-new@example.com,101 Market St,San Francisco,United States,94105,CA
+,,LOC-B2,Distribution,test-b-new@example.com,202 Dock St,San Francisco,United States,94107,CA
+,,LOC-B3,Outlet,test-b-new@example.com,303 Pier,San Francisco,United States,94111,CA

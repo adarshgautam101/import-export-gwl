@@ -155,17 +155,31 @@ export async function action({ request }: ActionFunctionArgs) {
       const results: any[] = [];
 
       // Transform CSV records to company format
-      const companies = records.map((record: any, index: number) => {
+      const companies: any[] = [];
+
+      records.forEach((record: any, index: number) => {
         // Normalize record keys to lowercase for easier matching
         const normalizedRecord: any = {};
         Object.keys(record).forEach(key => {
           normalizedRecord[key.toLowerCase().trim()] = record[key];
         });
 
-        const companyId = normalizedRecord.company_id || normalizedRecord.id || `COMP_${Date.now()}_${index}`;
+        const companyId = normalizedRecord.company_id || normalizedRecord.id;
+        const name = normalizedRecord.name || normalizedRecord['company name'];
 
-        return {
-          name: normalizedRecord.name || normalizedRecord['company name'] || `Company ${index + 1}`,
+        // Validate required fields
+        if (!companyId || !name) {
+          errorCount++;
+          results.push({
+            title: `Row ${index + 1}`,
+            status: 'error',
+            message: `Missing required fields: ${!companyId ? 'company_id' : ''} ${!name ? 'name' : ''}`.trim()
+          });
+          return; // Skip this record
+        }
+
+        companies.push({
+          name: name,
           company_id: companyId,
           main_contact_id: normalizedRecord.main_contact_id || normalizedRecord['company contact last name'] || null,
           contact_email: normalizedRecord.contact_email || normalizedRecord.email || null,
@@ -189,7 +203,7 @@ export async function action({ request }: ActionFunctionArgs) {
           metafields: normalizedRecord.metafields || null,
           catalogs: [],
           shopify_customer_id: undefined
-        };
+        });
       });
 
       // Process ALL companies together (importCompanies handles grouping by company_id internally)
