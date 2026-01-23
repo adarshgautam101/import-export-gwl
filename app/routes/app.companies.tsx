@@ -212,7 +212,10 @@ export default function CompaniesPage() {
                 <Text as="p" tone="subdued" variant="bodyMd">
                   Import your company data to get started with B2B management.
                 </Text>
-                <Button variant="primary" onClick={() => setIsImportModalOpen(true)}>
+                <Button variant="primary" onClick={() => {
+                  resetImport();
+                  setIsImportModalOpen(true);
+                }}>
                   Import Companies
                 </Button>
               </BlockStack>
@@ -223,7 +226,10 @@ export default function CompaniesPage() {
 
       <ImportModal
         open={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          if (importResults) resetImport();
+        }}
         onCancel={cancelImport}
         title="Import Companies"
         onImport={handleImport}

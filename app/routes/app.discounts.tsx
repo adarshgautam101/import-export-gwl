@@ -260,7 +260,10 @@ export default function DiscountsPage() {
                 <Text as="p" tone="subdued" variant="bodyMd">
                   Create discount codes and automatic discounts.
                 </Text>
-                <Button variant="primary" onClick={() => setIsImportModalOpen(true)}>
+                <Button variant="primary" onClick={() => {
+                  resetImport();
+                  setIsImportModalOpen(true);
+                }}>
                   Create Discount
                 </Button>
               </BlockStack>
@@ -271,7 +274,10 @@ export default function DiscountsPage() {
 
       <ImportModal
         open={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          if (importResults) resetImport();
+        }}
         onCancel={cancelImport}
         title="Import Discounts"
         onImport={handleImport}

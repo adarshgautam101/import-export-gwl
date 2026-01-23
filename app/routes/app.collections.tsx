@@ -287,7 +287,10 @@ export default function CollectionsPage() {
                 <Text as="p" tone="subdued" variant="bodyMd">
                   Import your collections to get started.
                 </Text>
-                <Button variant="primary" onClick={() => setIsImportModalOpen(true)}>
+                <Button variant="primary" onClick={() => {
+                  resetImport();
+                  setIsImportModalOpen(true);
+                }}>
                   Import Collections
                 </Button>
               </BlockStack>
@@ -298,7 +301,10 @@ export default function CollectionsPage() {
 
       <ImportModal
         open={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          if (importResults) resetImport();
+        }}
         onCancel={cancelImport}
         title="Import Collections"
         onImport={handleImport}

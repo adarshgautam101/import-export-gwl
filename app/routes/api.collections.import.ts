@@ -338,7 +338,7 @@ export async function action({ request }: ActionFunctionArgs) {
             };
 
             // Save to database and Shopify
-            const result = await saveCollectionLocally(collectionData, admin);
+            const result = await saveCollectionLocally(collectionData, admin, { preventUpdate: true });
 
             successCount++;
 

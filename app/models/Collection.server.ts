@@ -96,7 +96,7 @@ async function withRetry<T>(
   }
 }
 
-export async function saveCollectionLocally(data: CollectionData, admin: any): Promise<{ action: 'created' | 'updated'; shopifyId?: bigint; warnings?: string[] }> {
+export async function saveCollectionLocally(data: CollectionData, admin: any, options: { preventUpdate?: boolean } = {}): Promise<{ action: 'created' | 'updated'; shopifyId?: bigint; warnings?: string[] }> {
   const warnings: string[] = [];
   const collectionData = {
     title: data.title,
@@ -142,6 +142,9 @@ export async function saveCollectionLocally(data: CollectionData, admin: any): P
 
       if (match) {
         console.log(`🔍 Found existing Shopify collection by handle: "${match.title}" (ID: ${match.id})`);
+        if (options.preventUpdate) {
+          throw new Error(`Collection "${match.title}" already exists in Shopify.`);
+        }
         const idMatch = match.id.match(/\/(\d+)$/);
         if (idMatch?.[1]) {
           newShopifyId = BigInt(idMatch[1]);
@@ -149,6 +152,9 @@ export async function saveCollectionLocally(data: CollectionData, admin: any): P
         }
       }
     } catch (error: any) {
+      if (options.preventUpdate && error.message.includes('already exists')) {
+        throw error;
+      }
       console.warn('Collection existence check failed:', error.message);
     }
 
@@ -286,6 +292,9 @@ export async function saveCollectionLocally(data: CollectionData, admin: any): P
     };
 
     if (existingMeta) {
+      if (options.preventUpdate) {
+        throw new Error(`Collection "${data.title}" already exists locally.`);
+      }
       action = 'updated';
       await updateMetaobject(admin, existingMeta.id, { ...finalData, updated_at: new Date() });
     } else {

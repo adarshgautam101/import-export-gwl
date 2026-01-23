@@ -253,7 +253,10 @@ export default function MetaobjectsPage() {
                 {activeDefinition && (
                     <ImportModal
                         open={isImportModalOpen}
-                        onClose={() => setIsImportModalOpen(false)}
+                        onClose={() => {
+                            setIsImportModalOpen(false);
+                            if (importResults) resetImport();
+                        }}
                         onCancel={cancelImport}
                         title={`Import ${activeDefinition.name}`}
                         onImport={onImportSubmit}
