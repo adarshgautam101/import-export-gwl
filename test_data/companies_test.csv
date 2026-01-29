@@ -1,7 +1,0 @@
-company_id,name,location_id,location_name,contact_email,shipping_street,shipping_city,shipping_country,shipping_zip,shipping_state
-,,LOC-A1,Headquarters,test-a-new@example.com,123 Main St,New York,United States,10001,NY
-,,LOC-A2,Warehouse,test-a-new@example.com,456 Side St,New York,United States,10002,NY
-,,LOC-A3,Retail Store,test-a-new@example.com,789 Broadway,New York,United States,10003,NY
-,,LOC-B1,Main Office,test-b-new@example.com,101 Market St,San Francisco,United States,94105,CA
-,,LOC-B2,Distribution,test-b-new@example.com,202 Dock St,San Francisco,United States,94107,CA
-,,LOC-B3,Outlet,test-b-new@example.com,303 Pier,San Francisco,United States,94111,CA

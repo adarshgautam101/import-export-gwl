@@ -22,18 +22,17 @@ export interface CollectionData {
 }
 
 export const getAllLocalCollections = async (admin: any, page = 1, pageSize = 20, collectionType?: 'manual' | 'smart') => {
-  // Note: Metaobject filtering is limited. We might need to fetch all and filter in memory or use a search query if supported.
-  // For now, we'll fetch a batch and filter in memory if needed, or just list all.
+
 
   const { nodes: collections, pageInfo } = await listMetaobjects(admin, METAOBJECT_DEFS.COLLECTION.type, pageSize);
 
-  // Map collection_handle back to handle for the application interface
+
   const mappedCollections = collections.map((c: any) => ({
     ...c,
     handle: c.collection_handle,
   }));
 
-  // In-memory filter if collectionType is provided (not efficient for large datasets but sufficient for now)
+
   const filteredCollections = collectionType
     ? mappedCollections.filter((c: any) => c.collection_type === collectionType)
     : mappedCollections;
@@ -114,9 +113,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
   };
 
   if (data.id) {
-    // If we have an ID, we assume it's a Metaobject ID (or we need to find it). 
-    // Since we are migrating, 'id' might be a number from SQL. We need to handle that.
-    // For new system, ID will be string.
+
     return updateMetaobject(admin, String(data.id), collectionData);
   }
 
@@ -125,7 +122,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
   let action: 'created' | 'updated' = 'created';
 
   if (admin && !newShopifyId) {
-    // Check if collection already exists in Shopify by handle
+
     try {
       const checkQuery = await admin.graphql(`
         query($handle: String!) {
@@ -141,7 +138,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
       const match = checkResult.data?.collectionByHandle;
 
       if (match) {
-        console.log(`🔍 Found existing Shopify collection by handle: "${match.title}" (ID: ${match.id})`);
+
         if (options.preventUpdate) {
           throw new Error(`Collection "${match.title}" already exists in Shopify.`);
         }
@@ -158,7 +155,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
       console.warn('Collection existence check failed:', error.message);
     }
 
-    // Prepare input for Create or Update
+
     const input: any = {
       title: data.title,
       descriptionHtml: data.description || '',
@@ -170,7 +167,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
         const metafieldsInput = data.stored_metafields.split('|').map(mf => {
           const separatorIndex = mf.indexOf(':');
           if (separatorIndex === -1) {
-            warnings.push(`Invalid metafield format "${mf}". Expected format: "namespace.key:value" (e.g., "custom.color:blue")`);
+            warnings.push(`Invalid metafield format. Expected format: "namespace.key:value" (e.g., "custom.color:blue")`);
             return null;
           }
 
@@ -179,7 +176,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
 
           let [namespace, key] = keyPart.split('.');
           if (!key) {
-            // Namespace is missing - warn the user
+
             key = namespace;
             namespace = 'custom';
             warnings.push(`Metafield "${mf}" is missing namespace. Using "custom.${key}:${value}" instead. Please ensure the metafield definition "custom.${key}" exists in your Shopify store.`);
@@ -217,7 +214,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
     }
 
     if (newShopifyId) {
-      // UPDATE EXISTING
+
       const updateCollection = async (id: string, input: any) => {
         const res = await admin.graphql(
           `mutation collectionUpdate($input: CollectionInput!) {
@@ -231,13 +228,13 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
         return res.json();
       };
 
-      console.log(`🔄 Updating Shopify collection ${newShopifyId} with title: "${input.title}"`);
+
       await withRetry(
         () => updateCollection(String(newShopifyId), input),
         (res: any) => res.data?.collectionUpdate?.userErrors?.map((e: any) => e.message).join(', ') || null
       );
     } else {
-      // CREATE NEW
+
       const createCollection = async (input: any) => {
         const res = await admin.graphql(
           `mutation collectionCreate($input: CollectionInput!) {
@@ -279,7 +276,7 @@ export async function saveCollectionLocally(data: CollectionData, admin: any, op
   }
 
   if (newShopifyId || !admin) {
-    // Ensure definition exists
+
     await ensureMetaobjectDefinition(admin, METAOBJECT_DEFS.COLLECTION);
 
     const metaHandle = generateMetaobjectHandle('col', collectionHandle);
@@ -345,7 +342,7 @@ const mapFieldToColumn = (field: string) => ({
   'variant_weight': 'VARIANT_WEIGHT',
   'variant_inventory': 'VARIANT_INVENTORY',
   'variant_title': 'VARIANT_TITLE',
-  // Legacy mappings
+
   'price': 'VARIANT_PRICE',
   'compare_at_price': 'VARIANT_COMPARE_AT_PRICE',
   'inventory_stock': 'VARIANT_INVENTORY'

@@ -1,0 +1,5 @@
+title,discount_type,value,code,buy_quantity,get_quantity,get_discount,product_ids,applies_to,minimum_requirement_type,minimum_requirement_value
+Buy 2 Get 1 Free,buy_x_get_y,,BXGY_DEMO,2,1,100,"10108863185175,10107587068183,9969769316631,10107637956887",specific_products,,
+$10 Off Product,fixed_amount,10,PROD_OFF_10,,,,"10108863185175",specific_products,,
+$20 Off Order,fixed_amount,20,ORDER_OFF_20,,,,,all,subtotal,100
+Free Shipping Over $50,shipping,0,FREE_SHIP_50,,,,,all,subtotal,50

@@ -1,0 +1,8 @@
+title,collection_type,field,relation_type,condition,tags,product_ids,metafields
+Manual Featured Products,manual,,,,,"10108863185175,10107587068183,9969769316631,10107637956887",custom.testcollection:manual_val
+Smart Starts With Demo,smart,title,starts_with,e,,,custom.testcollection:smart_val_1
+Smart Ends With Demo,smart,title,ends_with,m,,,custom.testcollection:smart_val_2
+Smart Contains Demo,smart,title,contains,day,,custom.testcollection:smart_val_3
+Smart Tag Mmmmm,smart,tag,equals,mmmmm,,,custom.testcollection:smart_val_4
+Smart Tag Yes,smart,tag,equals,yes,,,custom.testcollection:smart_val_5
+Smart Tag Test,smart,tag,equals,test,,,custom.testcollection:smart_val_6

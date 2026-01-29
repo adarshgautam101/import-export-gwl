@@ -313,9 +313,9 @@ export default function CollectionsPage() {
         results={importResults}
         entityName="collections"
         sampleCsvName="collections_sample.csv"
-        sampleCsvContent={`title,collection_type,product_ids,relation_type,tags,metafields
-Manual Collection,manual,1234567890,,,custom.testcollection:Manual Value
-Collection C,smart,,equals,yes,custom.testcollection:Smart Value`}
+        sampleCsvContent={`title,collection_type,field,relation_type,condition,tags,product_ids,metafields
+Manual Collection,manual,,,,,"1234567890,0987654321",custom.testcollection:Manual Value
+Smart Collection,smart,title,starts_with,Smart,,,custom.testcollection:Smart Value`}
         onImportComplete={() => navigate(".", { replace: true })}
       />
       {showSuccessToast && (

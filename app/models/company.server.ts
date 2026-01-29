@@ -30,11 +30,9 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
       const baseName = companyData.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 15);
       const email = `${baseName}_${emailSuffix}@company-local.com`;
 
-      // Parse metafields
       let metafieldsInput: any[] = [];
       if (companyData.metafields) {
         try {
-          // Format: namespace.key:value|namespace.key:value
           metafieldsInput = companyData.metafields.split('|').map(mf => {
             const [keyPart, value] = mf.split(':');
             const [namespace, key] = keyPart.split('.');
@@ -48,10 +46,9 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
         }
       }
 
-      // Determine email to use
       let contactEmail = companyData.contact_email || email;
 
-      // Check if company already exists in Shopify by name or external_id
+
       try {
         let queryString = "";
         if (companyData.company_id) {
@@ -74,13 +71,13 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
 
         const checkResult = await checkQuery.json();
         if (checkResult.data?.companies?.nodes?.length > 0) {
-          // If we searched by externalId, we should have an exact match
+
           if (companyData.company_id) {
             const match = checkResult.data.companies.nodes.find((n: any) => n.externalId === companyData.company_id);
             if (match) return { company: match, isNew: false };
           }
 
-          // If we searched by name or didn't find by externalId, check for exact name match
+
           const nameMatch = checkResult.data.companies.nodes.find((n: any) => n.name === companyData.name);
           if (nameMatch) return { company: nameMatch, isNew: false };
         }
@@ -148,8 +145,8 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
         const emailError = companyCreate.userErrors.find((e: any) => e.field.includes('email') && e.message.includes('taken'));
 
         if (emailError) {
-          // If email is taken, try to find the company by email to recover the ID
-          console.log(`🔍 Email taken, attempting to find existing company by email: ${contactEmail}`);
+
+
           try {
             const findByEmailQuery = await admin.graphql(`
               query($query: String!) {
@@ -166,15 +163,15 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
             if (findResult.data?.companies?.nodes?.length > 0) {
               const foundCompany = findResult.data.companies.nodes[0];
 
-              // ONLY recover if the name matches OR the externalId matches
+
               const nameMatches = foundCompany.name.toLowerCase() === companyData.name.toLowerCase();
               const externalIdMatches = companyData.company_id && foundCompany.externalId === companyData.company_id;
 
               if (nameMatches || externalIdMatches) {
-                console.log(`✅ Recovered existing company ID: ${foundCompany.id}`);
+
                 return { company: foundCompany, isNew: false };
               } else {
-                // User requirement: If email is taken, link to that company anyway but log a warning
+
                 console.warn(`⚠️ Email ${contactEmail} is taken by "${foundCompany.name}" (ID: ${foundCompany.id}). Linking to it anyway.`);
                 return { company: foundCompany, isNew: false };
               }
@@ -183,8 +180,7 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
             if (e.message.includes('already taken')) throw e;
             console.warn('Failed to recover company by email:', e);
           }
-          // If we couldn't find the company to recover it, but Shopify says email is taken,
-          // it's a fatal error for this company.
+
           throw new Error(`Email ${contactEmail} is already taken by another company.`);
         }
         throw new Error(`Shopify API error for ${companyData.name}: ${companyCreate.userErrors.map((e: any) => e.message).join(', ')}`);
@@ -192,7 +188,7 @@ export async function createShopifyCompany(admin: any, companyData: CompanyData)
 
       const company = companyCreate.company;
 
-      // Set metafields if present
+
       if (company && metafieldsInput.length > 0) {
 
         const metafieldsVariables = {
@@ -256,7 +252,7 @@ export async function createShopifyCompanyWithFallback(admin: any, companyData: 
 
 export async function createShopifyCompanyLocation(admin: any, shopifyCompanyId: string, locationData: CompanyData) {
   try {
-    // Check if location already exists by externalId
+
     if (locationData.location_id) {
       try {
         const checkQuery = await admin.graphql(`
@@ -279,12 +275,12 @@ export async function createShopifyCompanyLocation(admin: any, shopifyCompanyId:
         );
 
         if (existingLocation) {
-          console.log(`✓ Location "${locationData.location_name}" already exists with externalId ${locationData.location_id}`);
+
           return existingLocation;
         }
       } catch (checkError: any) {
         console.warn('Could not check for existing location:', checkError.message);
-        // Continue with creation attempt
+
       }
     }
 
@@ -376,7 +372,7 @@ export async function importCompanies(
 ) {
   const results = [];
 
-  // Group companies by company_id to handle multi-location companies
+
   const companyGroups = new Map<string, CompanyData[]>();
 
   for (const company of companies) {
@@ -387,7 +383,7 @@ export async function importCompanies(
     companyGroups.get(companyId)!.push(company);
   }
 
-  // Process each company group
+
   let processedCount = 0;
   const totalGroups = companyGroups.size;
 
@@ -400,25 +396,25 @@ export async function importCompanies(
     let isNewCompany = false;
 
     try {
-      // Use the first location as the main company data
+
       const mainCompany = locations[0];
 
-      // Ensure Metaobject Definition exists (idempotent, fast check)
+
       await ensureMetaobjectDefinition(admin, METAOBJECT_DEFS.COMPANY);
 
-      // Check if company already exists in Metaobjects using a consistent handle
+
       const companyHandle = generateMetaobjectHandle('company', companyId);
       const existingCompany = await getMetaobjectByHandle(admin, METAOBJECT_DEFS.COMPANY.type, companyHandle);
 
-      // Create company in Shopify ONLY ONCE (before processing locations)
+
       if (existingCompany?.shopify_customer_id) {
-        // Company already exists in Shopify, reuse the ID
+
         shopifyCompanyId = existingCompany.shopify_customer_id;
         shopifySyncSuccessful = true;
         isNewCompany = false;
 
       } else {
-        // Create company in Shopify (only once, using first location data)
+
 
         const result = await createShopifyCompanyWithFallback(admin, mainCompany);
         if (result?.company?.id) {
@@ -438,12 +434,12 @@ export async function importCompanies(
         const startIndex = isNewCompany ? 1 : 0;
 
         if (locations.length > startIndex) {
-          console.log(`📍 Creating ${locations.length - startIndex} additional location(s) for company ${shopifyCompanyId}...`);
+
 
           for (let i = startIndex; i < locations.length; i++) {
             const additionalLocation = locations[i];
             try {
-              console.log(`  → Location ${i + 1}/${locations.length}: "${additionalLocation.location_name}" (externalId: ${additionalLocation.location_id})`);
+
 
               const shopifyLocation = await createShopifyCompanyLocation(
                 admin,
@@ -452,7 +448,7 @@ export async function importCompanies(
               );
 
               if (shopifyLocation) {
-                console.log(`  ✓ Successfully created/found location: "${additionalLocation.location_name}" (ID: ${shopifyLocation.id})`);
+
               } else {
                 console.warn(`  ⚠ Location creation returned null: "${additionalLocation.location_name}"`);
               }
@@ -647,19 +643,39 @@ export async function syncCompaniesWithShopify(admin: any) {
 }
 
 export const getAllCompanies = async (admin: any, page = 1, pageSize = 20, cursor?: string) => {
-  const { nodes: rawCompanies, pageInfo } = await listMetaobjects(admin, METAOBJECT_DEFS.COMPANY.type, pageSize, cursor);
+  // Fetch all companies to group them
+  // Note: Pagination here applies to the *grouped* result, so we might need to fetch more or handle pagination differently.
+  // For now, we'll fetch a larger batch to ensure we get related locations, but ideally this should be optimized.
+  const { nodes: rawCompanies, pageInfo } = await listMetaobjects(admin, METAOBJECT_DEFS.COMPANY.type, 250, cursor);
 
-  const companies = rawCompanies.map((c: any) => {
-    const contactInfo = typeof c.contact_info === 'string' ? JSON.parse(c.contact_info) : (c.contact_info || {});
-    const shippingAddress = typeof c.shipping_address === 'string' ? JSON.parse(c.shipping_address) : (c.shipping_address || {});
-    const billingAddress = typeof c.billing_address === 'string' ? JSON.parse(c.billing_address) : (c.billing_address || {});
+  // Group by company_id
+  const companyGroups = new Map<string, any[]>();
+  rawCompanies.forEach((c: any) => {
+    const companyId = c.company_id || c.id; // Fallback to ID if company_id missing
+    if (!companyGroups.has(companyId)) {
+      companyGroups.set(companyId, []);
+    }
+    companyGroups.get(companyId)!.push(c);
+  });
+
+  // Convert groups to unique company objects with location count
+  const uniqueCompanies = Array.from(companyGroups.values()).map(group => {
+    // Use the first record (usually main location or first created) as the representative
+    // Ideally, we should find the one marked as 'main' or similar, but for now first is fine.
+    const mainCompany = group[0];
+    const locationCount = group.length;
+
+    const contactInfo = typeof mainCompany.contact_info === 'string' ? JSON.parse(mainCompany.contact_info) : (mainCompany.contact_info || {});
+    const shippingAddress = typeof mainCompany.shipping_address === 'string' ? JSON.parse(mainCompany.shipping_address) : (mainCompany.shipping_address || {});
+    const billingAddress = typeof mainCompany.billing_address === 'string' ? JSON.parse(mainCompany.billing_address) : (mainCompany.billing_address || {});
 
     return {
-      id: c.id,
-      company_id: c.company_id,
-      name: c.name,
-      location_id: c.location_id,
-      location_name: c.location_name,
+      id: mainCompany.id,
+      company_id: mainCompany.company_id,
+      name: mainCompany.name,
+      location_id: mainCompany.location_id,
+      location_name: mainCompany.location_name,
+      location_count: locationCount, // Added field
 
       // Flatten Contact Info
       main_contact_id: contactInfo.main_contact_id,
@@ -698,37 +714,40 @@ export const getAllCompanies = async (admin: any, page = 1, pageSize = 20, curso
       billing_attention: billingAddress.attention,
 
       // Other fields
-      catalogs: typeof c.catalogs === 'string' ? JSON.parse(c.catalogs) : c.catalogs,
-      payment_terms: c.payment_terms,
-      no_payment_terms: c.no_payment_terms,
-      checkout_settings: typeof c.checkout_settings === 'string' ? JSON.parse(c.checkout_settings) : c.checkout_settings,
-      ship_to_any_address: c.ship_to_any_address,
-      auto_submit_orders: c.auto_submit_orders,
-      submit_all_as_drafts: c.submit_all_as_drafts,
-      tax_settings: typeof c.tax_settings === 'string' ? JSON.parse(c.tax_settings) : c.tax_settings,
-      tax_id: c.tax_id,
-      collect_tax: c.collect_tax,
-      markets: typeof c.markets === 'string' ? JSON.parse(c.markets) : c.markets,
-      shopify_customer_id: c.shopify_customer_id,
-      external_system_id: c.external_system_id,
-      metafields: c.stored_metafields,
-      created_at: c.created_at,
-      updated_at: c.updated_at
+      catalogs: typeof mainCompany.catalogs === 'string' ? JSON.parse(mainCompany.catalogs) : mainCompany.catalogs,
+      payment_terms: mainCompany.payment_terms,
+      no_payment_terms: mainCompany.no_payment_terms,
+      checkout_settings: typeof mainCompany.checkout_settings === 'string' ? JSON.parse(mainCompany.checkout_settings) : mainCompany.checkout_settings,
+      ship_to_any_address: mainCompany.ship_to_any_address,
+      auto_submit_orders: mainCompany.auto_submit_orders,
+      submit_all_as_drafts: mainCompany.submit_all_as_drafts,
+      tax_settings: typeof mainCompany.tax_settings === 'string' ? JSON.parse(mainCompany.tax_settings) : mainCompany.tax_settings,
+      tax_id: mainCompany.tax_id,
+      collect_tax: mainCompany.collect_tax,
+      markets: typeof mainCompany.markets === 'string' ? JSON.parse(mainCompany.markets) : mainCompany.markets,
+      shopify_customer_id: mainCompany.shopify_customer_id,
+      external_system_id: mainCompany.external_system_id,
+      metafields: mainCompany.stored_metafields,
+      created_at: mainCompany.created_at,
+      updated_at: mainCompany.updated_at
     };
   });
 
-  const total = 0;
+  // Client-side pagination for the grouped results
+  const total = uniqueCompanies.length;
+  const startIndex = (page - 1) * pageSize;
+  const paginatedCompanies = uniqueCompanies.slice(startIndex, startIndex + pageSize);
 
   return {
-    companies,
+    companies: paginatedCompanies,
     pagination: {
       page,
       pageSize,
       total,
-      totalPages: 0,
-      hasNextPage: pageInfo.hasNextPage,
-      hasPreviousPage: false,
-      endCursor: pageInfo.endCursor
+      totalPages: Math.ceil(total / pageSize),
+      hasNextPage: startIndex + pageSize < total,
+      hasPreviousPage: page > 1,
+      endCursor: pageInfo.endCursor // This might not be accurate for grouped pagination, but kept for compatibility
     },
   };
 };

@@ -25,6 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
               productsCount { count }
               image { url altText }
               ruleSet { appliedDisjunctively rules { column relation condition } }
+              products(first: 50) { nodes { id } }
               ${includeMetafields ? `
               metafields(first: 20) {
                 edges {
@@ -59,14 +60,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     const csvData = allCollections.map((node: any) => {
       const isSmart = node.ruleSet?.rules?.length > 0;
+
+      // Extract rule details if smart collection
+      let field = '';
+      let relation_type = '';
+      let condition = '';
+
+      if (isSmart && node.ruleSet.rules[0]) {
+        const rule = node.ruleSet.rules[0];
+        field = rule.column;
+        relation_type = rule.relation;
+        condition = rule.condition;
+      }
+
+      // Extract product IDs for manual collections
+      const productIds = node.products?.nodes?.map((p: any) => p.id.split('/').pop()).join(',') || '';
+
       const baseData = {
         title: node.title || '',
         description: node.description || node.descriptionHtml || '',
         handle: node.handle || '',
         collection_type: isSmart ? 'smart' : 'manual',
-        relation_type: isSmart ? (node.ruleSet.appliedDisjunctively ? 'ANY' : 'ALL') : 'ANY',
-        tags: '',
-        product_ids: '',
+        field: field,
+        relation_type: relation_type || (isSmart ? (node.ruleSet.appliedDisjunctively ? 'ANY' : 'ALL') : ''),
+        condition: condition,
+        tags: '', // Deprecated/Legacy
+        product_ids: productIds,
         products_count: node.productsCount?.count || 0,
         image_url: node.image?.url || ''
       };
@@ -81,7 +100,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       return baseData;
     });
 
-    const columns = ['title', 'description', 'handle', 'collection_type', 'relation_type', 'tags', 'product_ids', 'products_count', 'image_url'];
+    const columns = ['title', 'description', 'handle', 'collection_type', 'field', 'relation_type', 'condition', 'tags', 'product_ids', 'products_count', 'image_url'];
     if (includeMetafields) columns.push('metafields');
 
     const csvString = stringify(csvData, {

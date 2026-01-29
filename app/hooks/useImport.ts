@@ -24,14 +24,12 @@ interface JobStatusResponse {
     message?: string;
 }
 
-// Simple robust CSV parser for browser
 const parseCSV = (text: string) => {
     const lines: string[][] = [];
     let currentRow: string[] = [];
     let currentField = '';
     let insideQuotes = false;
 
-    // Detect delimiter (comma or tab)
     const firstLine = text.split('\n')[0];
     const delimiter = firstLine.includes('\t') ? '\t' : ',';
 
@@ -42,7 +40,7 @@ const parseCSV = (text: string) => {
         if (char === '"') {
             if (insideQuotes && nextChar === '"') {
                 currentField += '"';
-                i++; // Skip escaped quote
+                i++;
             } else {
                 insideQuotes = !insideQuotes;
             }
@@ -50,7 +48,7 @@ const parseCSV = (text: string) => {
             currentRow.push(currentField);
             currentField = '';
         } else if ((char === '\n' || char === '\r') && !insideQuotes) {
-            if (char === '\r' && nextChar === '\n') i++; // Handle CRLF
+            if (char === '\r' && nextChar === '\n') i++;
             currentRow.push(currentField);
             lines.push(currentRow);
             currentRow = [];
@@ -64,18 +62,16 @@ const parseCSV = (text: string) => {
         lines.push(currentRow);
     }
 
-    // Convert to objects
     const headers = lines[0].map(h => h.trim());
     return lines.slice(1).map(line => {
         const obj: any = {};
-        // Pad line if it has fewer columns than headers
         const paddedLine = [...line];
         while (paddedLine.length < headers.length) {
             paddedLine.push('');
         }
         headers.forEach((h, i) => obj[h] = paddedLine[i]?.trim() || '');
         return obj;
-    }).filter(obj => Object.values(obj).some(v => v !== '')); // Filter out completely empty rows
+    }).filter(obj => Object.values(obj).some(v => v !== ''));
 };
 
 export function useImport(url: string, entityType: string) {
@@ -108,7 +104,6 @@ export function useImport(url: string, entityType: string) {
                 const response = await fetch(`${url}?jobId=${jobId}`);
                 if (!response.ok) {
                     if (response.status === 404) {
-                        // Job not found (maybe server restarted), clear it
                         clearJob();
                         return;
                     }
@@ -117,8 +112,6 @@ export function useImport(url: string, entityType: string) {
 
                 const data: JobStatusResponse = await response.json();
 
-                // Calculate progress based on processed records vs total
-                // The backend might send progress percentage directly or we calculate it
                 setImportProgress(data.progress || 0);
 
                 if (data.status === 'completed' || data.status === 'failed' || data.status === 'cancelled') {
@@ -133,19 +126,15 @@ export function useImport(url: string, entityType: string) {
                 }
             } catch (error) {
                 console.error('Polling error:', error);
-                // Don't stop polling on transient errors, but maybe stop after too many failures?
-                // For now, keep polling.
             }
-        }, 2000); // Poll every 2 seconds
+        }, 2000);
     }, [url, clearJob, stopPolling]);
 
-    // Load active job from local storage on mount
     useEffect(() => {
         const storedJob = localStorage.getItem(`import_job_${entityType}`);
         if (storedJob) {
             const { jobId, metadata } = JSON.parse(storedJob);
             if (jobId) {
-
                 setActiveJobId(jobId);
                 if (metadata) setJobMetadata(metadata);
                 setIsImporting(true);
@@ -155,13 +144,10 @@ export function useImport(url: string, entityType: string) {
         return () => stopPolling();
     }, [entityType, startPolling, stopPolling]);
 
-
-
     const cancelImport = useCallback(async () => {
         if (!activeJobId) return;
 
         try {
-            // Send cancellation request
             const formData = new FormData();
             formData.append('action', 'cancel');
             formData.append('jobId', activeJobId);
@@ -170,8 +156,6 @@ export function useImport(url: string, entityType: string) {
                 method: 'POST',
                 body: formData
             });
-
-            // The polling loop will pick up the 'cancelled' status and clean up
         } catch (error) {
             console.error('Failed to cancel import:', error);
         }
@@ -195,7 +179,6 @@ export function useImport(url: string, entityType: string) {
             const text = await file.text();
             const records = parseCSV(text);
 
-            // Extract other fields from FormData
             const extraFields: Record<string, any> = {};
             formData.forEach((value, key) => {
                 if (key !== 'csvFile') {
@@ -203,7 +186,6 @@ export function useImport(url: string, entityType: string) {
                 }
             });
 
-            // Send records to start job
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

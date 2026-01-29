@@ -130,18 +130,12 @@ export default function CompaniesPage() {
   const rows = companies.map(company => [
     <BlockStack gap="100">
       <Text variant="bodyMd" fontWeight="bold" as="span">{company.name}</Text>
-      {company.shipping_city && company.shipping_country && (
-        <Text variant="bodySm" tone="subdued" as="span">
-          {company.shipping_city}, {company.shipping_country}
-        </Text>
-      )}
+      <Text variant="bodySm" tone="subdued" as="span">{company.main_contact_id || 'No contact ID'}</Text>
     </BlockStack>,
-    <Text as="span" variant="bodyMd" tone="subdued">{company.company_id || 'N/A'}</Text>,
+    <Text as="span" variant="bodyMd" tone="subdued">{company.location_count ? `${company.location_count} locations` : '1 location'}</Text>,
     <Text as="span" tone="subdued">{company.contact_email || 'N/A'}</Text>,
     <Text as="span" tone="subdued">{new Date(company.created_at).toLocaleDateString()}</Text>
   ]);
-
-
 
   return (
     <GenericPage
@@ -187,7 +181,7 @@ export default function CompaniesPage() {
             <>
               <DataTable
                 columnContentTypes={['text', 'text', 'text', 'text']}
-                headings={['Company', 'ID', 'Contact', 'Created']}
+                headings={['Company', 'Locations', 'Main contact', 'Created']}
                 rows={rows}
                 pagination={{
                   hasNext: pagination.hasNextPage,

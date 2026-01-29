@@ -14,8 +14,8 @@ interface ImportModalProps {
     results: ImportResult | null;
     sampleCsvContent: string;
     sampleCsvName: string;
-    entityName: string; // e.g., "companies", "collections"
-    onImportComplete?: () => void; // Optional callback for post-import actions
+    entityName: string;
+    onImportComplete?: () => void;
 }
 
 export function ImportModal({
@@ -49,13 +49,12 @@ export function ImportModal({
     };
 
     const handleCloseRequest = () => {
-        // Allow closing the modal without cancelling (background import)
         onClose();
     };
 
     const confirmCancel = () => {
         setShowCancelConfirmation(false);
-        onCancel(); // Explicitly cancel the job
+        onCancel();
     };
 
     return (
@@ -148,7 +147,6 @@ export function ImportModal({
                                 {results.errorCount > 0 && <p>Failed: <strong>{results.errorCount}</strong></p>}
                             </Banner>
 
-                            {/* Show detailed errors and warnings if any exist */}
                             {results.results && (results.results.some(r => r.status === 'error') || results.results.some(r => r.status === 'warning')) && (
                                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                     <BlockStack gap="200">
@@ -180,7 +178,6 @@ export function ImportModal({
                 </Modal.Section>
             </Modal>
 
-            {/* Cancellation Confirmation Modal */}
             <Modal
                 open={showCancelConfirmation}
                 onClose={() => setShowCancelConfirmation(false)}

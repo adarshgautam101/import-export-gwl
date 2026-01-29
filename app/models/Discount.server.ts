@@ -254,10 +254,10 @@ const buildCustomerGets = (discountData: CreateDiscountData) => {
   if (discountData.discount_type !== 'shipping') {
     if (discountData.applies_to === 'specific_products' && discountData.product_ids?.length) {
       const uniqueProductIds = [...new Set(discountData.product_ids)];
-      customerGets.items = { products: { products: uniqueProductIds.map(id => `gid://shopify/Product/${id}`) } };
+      customerGets.items = { products: { productsToAdd: uniqueProductIds.map(id => `gid://shopify/Product/${id}`) } };
     } else if (discountData.applies_to === 'specific_collections' && discountData.collection_ids?.length) {
       const uniqueCollectionIds = [...new Set(discountData.collection_ids)];
-      customerGets.items = { collections: { collections: uniqueCollectionIds.map(id => `gid://shopify/Collection/${id}`) } };
+      customerGets.items = { collections: { collectionsToAdd: uniqueCollectionIds.map(id => `gid://shopify/Collection/${id}`) } };
     }
   }
   return customerGets;

@@ -1,0 +1,13 @@
+company_id,name,location_id,location_name,shipping_street,shipping_city,shipping_country,contact_email,metafields
+CMP-00a1,Tech Solutions Incb,LOC-001-A,Headquarters,123 Tech Blvd,San Francisco,United States,contact@techsolutions.com,custom.testcompany:value1
+CMP-00a1,Tech Solutions Incb,LOC-001-B,Warehouse West,456 Supply Way,Oakland,United States,warehouse@techsolutions.com,custom.testcompany:value1
+CMP-00a1,Tech Solutions Incb,LOC-001-C,Sales Office,789 Market St,San Jose,United States,sales@techsolutions.com,custom.testcompany:value1
+CMP-002b,Global Traders Ltdm,LOC-002-A,Main Office,101 Global Ave,New York,United States,info@globaltraders.com,custom.testcompany:value2
+CMP-002b,Global Traders Ltdm,LOC-002-B,Distribution Center,202 Logistics Ln,Jersey City,United States,logistics@globaltraders.com,custom.testcompany:value2
+CMP-003c,Creative Designs Cob,LOC-003-A,Design Studio,303 Art St,Los Angeles,United States,hello@creativedesigns.com,custom.testcompany:value3
+CMP-003c,Creative Designs Cob,LOC-003-B,Showroom,404 Gallery Rd,Santa Monica,United States,showroom@creativedesigns.com,custom.testcompany:value3
+CMP-003c,Creative Designs Cob,LOC-003-C,Workshop,505 Craft Ave,Pasadena,United States,workshop@creativedesigns.com,custom.testcompany:value3
+CMP-004d,Eco Friendly Goodsf,LOC-004-A,Green HQ,606 Nature Dr,Portland,United States,contact@ecogoods.com,custom.testcompany:value4
+CMP-004c,Eco Friendly Goodsf,LOC-004-B,Recycling Center,707 Cycle Way,Beaverton,United States,ops@ecogoods.com,custom.testcompany:value4
+CMP-005r,Urban Outfitters LLCr,LOC-005-A,Downtown Store,808 City Plaza,Chicago,United States,store@urbanoutfitters.test,custom.testcompany:value5
+CMP-005r,Urban Outfitters LLCr,LOC-005-B,Suburban Outlet,909 Mall Dr,Naperville,United States,outlet@urbanoutfitters.test,custom.testcompany:value5

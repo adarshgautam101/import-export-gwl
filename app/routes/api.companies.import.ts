@@ -2,7 +2,6 @@
 import { ActionFunctionArgs } from "react-router";
 import { importCompanies } from "../models/company.server";
 import { authenticate } from "../shopify.server";
-
 import { importJobManager } from "../services/importJobManager.server";
 
 /**
@@ -13,12 +12,10 @@ import { importJobManager } from "../services/importJobManager.server";
 function validateCompanyHeaders(headers: string[]): { isValid: boolean; errorMessage?: string; detectedType?: string } {
   const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
 
-  // Unique headers that identify specific entity types
   const collectionHeaders = ['collection_type', 'relation_type', 'rule_set'];
   const discountHeaders = ['discount_type', 'buy_quantity', 'get_quantity', 'get_discount', 'usage_limit'];
   const metaobjectHeaders = ['metaobject_type', 'definition_type'];
 
-  // Check if this looks like a collection file
   const collectionHeaderMatches = collectionHeaders.filter(h => normalizedHeaders.includes(h)).length;
   if (collectionHeaderMatches >= 2) {
     return {
@@ -28,7 +25,6 @@ function validateCompanyHeaders(headers: string[]): { isValid: boolean; errorMes
     };
   }
 
-  // Check if this looks like a discount file
   const discountHeaderMatches = discountHeaders.filter(h => normalizedHeaders.includes(h)).length;
   if (discountHeaderMatches >= 3) {
     return {
@@ -38,7 +34,6 @@ function validateCompanyHeaders(headers: string[]): { isValid: boolean; errorMes
     };
   }
 
-  // Check if this looks like a metaobject file
   const metaobjectHeaderMatches = metaobjectHeaders.filter(h => normalizedHeaders.includes(h)).length;
   if (metaobjectHeaderMatches >= 1) {
     return {
@@ -48,7 +43,6 @@ function validateCompanyHeaders(headers: string[]): { isValid: boolean; errorMes
     };
   }
 
-  // Validate that it has company-specific columns
   if (!normalizedHeaders.includes('company_id') && !normalizedHeaders.includes('name')) {
     return {
       isValid: false,
@@ -58,7 +52,6 @@ function validateCompanyHeaders(headers: string[]): { isValid: boolean; errorMes
 
   return { isValid: true };
 }
-
 
 export async function loader({ request }: ActionFunctionArgs) {
   const url = new URL(request.url);
@@ -96,7 +89,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const { admin } = await authenticate.admin(request);
 
-  // Handle cancellation
   if (request.method === 'POST') {
     const contentType = request.headers.get("Content-Type");
     if (contentType && !contentType.includes("application/json")) {
@@ -113,7 +105,6 @@ export async function action({ request }: ActionFunctionArgs) {
           });
         }
       } catch (e) {
-        // Not a form data request or body already read, proceed to JSON handling
       }
     }
   }
@@ -129,7 +120,6 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ error: "Invalid request body: 'records' array required" }, { status: 400 });
     }
 
-    // Validate CSV headers to ensure correct file type
     if (records.length > 0) {
       const headers = Object.keys(records[0]);
       const validation = validateCompanyHeaders(headers);
@@ -143,22 +133,15 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     }
 
-
-    // Start Background Job
     const jobId = importJobManager.createJob('companies', records.length);
 
-    // Fire and forget processing
     (async () => {
       let successCount = 0;
       let errorCount = 0;
-      let processedCount = 0;
       const results: any[] = [];
-
-      // Transform CSV records to company format
       const companies: any[] = [];
 
       records.forEach((record: any, index: number) => {
-        // Normalize record keys to lowercase for easier matching
         const normalizedRecord: any = {};
         Object.keys(record).forEach(key => {
           normalizedRecord[key.toLowerCase().trim()] = record[key];
@@ -167,7 +150,6 @@ export async function action({ request }: ActionFunctionArgs) {
         const companyId = normalizedRecord.company_id || normalizedRecord.id;
         const name = normalizedRecord.name || normalizedRecord['company name'];
 
-        // Validate required fields
         if (!companyId || !name) {
           errorCount++;
           results.push({
@@ -175,7 +157,7 @@ export async function action({ request }: ActionFunctionArgs) {
             status: 'error',
             message: `Missing required fields: ${!companyId ? 'company_id' : ''} ${!name ? 'name' : ''}`.trim()
           });
-          return; // Skip this record
+          return;
         }
 
         companies.push({
@@ -206,27 +188,17 @@ export async function action({ request }: ActionFunctionArgs) {
         });
       });
 
-      // Process ALL companies together (importCompanies handles grouping by company_id internally)
       try {
-        console.log(`🏢 Starting import of ${companies.length} location records...`);
-
         const importResults = await importCompanies(companies, admin, 'csv', (current, total) => {
-          const progress = Math.round((current / total) * 100);
-          console.log(`Progress: ${current}/${total} companies processed (${progress}%)`);
+          // Progress update if needed
         });
 
-        console.log(`✅ Import completed. Processing ${importResults.length} results...`);
-
-        // Count unique companies vs total locations
         const uniqueCompanyIds = new Set(importResults.map((r: any) => r.company_id));
         const companyCount = uniqueCompanyIds.size;
 
         successCount = importResults.filter((r: any) => r.success).length;
         errorCount = importResults.filter((r: any) => r.success === false).length;
 
-        console.log(`📊 Summary: ${companyCount} companies, ${successCount} locations created/updated, ${errorCount} errors`);
-
-        // Build results for UI
         importResults.forEach((result: any) => {
           if (!result.success) {
             results.push({
